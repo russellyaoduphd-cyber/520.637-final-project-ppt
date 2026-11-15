@@ -145,41 +145,7 @@
 
 \end{frame}
 
-\begin{frame}{Introduction}
-A popular idea in today's agent system design and robot learning is to use an LLM as a ``brain'' to reason before taking actions.
 
-\medskip
-\textbf{Why:} LLMs can interpret complex instructions, decompose long-horizon tasks, and adapt to unstructured scenarios.
-
-\medskip
-\textbf{Example:} a delivery robot told to ``bring the red box to the target zone''
-\begin{enumerate}
-  \item \textbf{Navigate} to the task region.
-  \item \textbf{Inspect} the region to find and confirm the target object.
-  \item \textbf{Pick} it up and \textbf{deliver} it to the target zone.
-\end{enumerate}
-
-\medskip
-The LLM can act as a \emph{planner} (what to do next) or a \emph{verifier} (is this the right object?), while a low-level executor carries out the actions.
-\end{frame}
-
-\begin{frame}{Problem}
-\textbf{LLM reasoning is slow and costly.}
-\begin{itemize}
-  \item \textbf{Too much reasoning delays actions.} \\
-        Reasoning at every step on ALFRED navigation: 31.5\,s of a 42.3\,s episode is LLM inference.
-  \item \textbf{Too little reasoning causes failures.} \\
-        On an abstract task-decomposition benchmark: 45.2\% success with no reasoning vs.\ 85.4\% with full reasoning.
-  \item \textbf{Existing triggers do not adapt.} \\
-        Fixed intervals or hand-crafted thresholds ignore task difficulty, execution feedback, and remaining budget.
-\end{itemize}
-
-\medskip
-Reasoning needs also vary within one task: routine stages favor direct execution, uncertain stages benefit from thinking.
-
-\medskip
-\textbf{Question:} After receiving an observation, \emph{when} should an agent think before acting, and \emph{how much} should it think?
-\end{frame}
 
 \begin{frame}{This Paper: RARRL}
 \textbf{R}esource-\textbf{A}ware \textbf{R}easoning via \textbf{R}einforcement \textbf{L}earning
@@ -204,13 +170,7 @@ Reasoning needs also vary within one task: routine stages favor direct execution
   \item \textbf{Robustness:} after a sudden budget cut, 74.9\% success vs.\ 61.8\% for the heuristic baseline.
 \end{itemize}
 \end{frame}
-\begin{frame}{Our Contribution}
-    \begin{itemize}
-        \item train an activation policy for an LLM in our setting based on the framework of the paper
-        \item extend the original Markov Process Decision to a partially observed one and explore via experiments
-        
-    \end{itemize}
-\end{frame}
+
 \begin{frame}{Framework of RARRL}
 \textbf{MDP: the orchestrator's decision problem}
 \begin{itemize}
