@@ -91,6 +91,61 @@
 \end{frame}
 
 \begin{frame}{Introduction}
+    \vspace{0.35cm}
+    
+    A popular idea in today's agent system design and robot learning is to use an LLM as a ``brain'' to reason before taking actions.
+    
+    \vspace{0.35cm}
+
+    \begin{columns}[T,onlytextwidth]
+
+        % Benefits
+        \begin{column}{0.60\textwidth}
+            \textbf{What LLMs enable}
+            \begin{itemize}
+                \setlength{\itemsep}{0.15em}
+                \item Interpret complex instructions
+                \item Decompose long-horizon tasks
+                \item Adapt to unstructured scenarios
+            \end{itemize}
+        \end{column}
+
+        % Costs
+        \begin{column}{0.36\textwidth}
+            {\color{red!75!black}\textbf{But reasoning is slow and costly}}
+            \begin{itemize}
+                \setlength{\itemsep}{0.15em}
+                \item \textbf{Slow:} delays actions
+                \item \textbf{Costly:} consumes tokens
+                      and compute
+            \end{itemize}
+        \end{column}
+
+    \end{columns}
+
+    \vspace{0.35cm}
+
+    \textbf{Example:}
+    ``Bring the red box to the target zone.''
+
+    \begin{enumerate}
+        \setlength{\itemsep}{0.1em}
+        \item \textbf{Navigate} to the task region.
+        \item \textbf{Inspect} and confirm the red box.
+        \item \textbf{Pick} it up and \textbf{deliver} it.
+    \end{enumerate}
+
+    \vspace{0.15cm}
+
+    \textbf{LLM:} plan(what to do next) and verify(is this the right object).
+    \quad
+
+    \vspace{0.45cm}
+
+
+\end{frame}
+
+\begin{frame}{Introduction}
 A popular idea in today's agent system design and robot learning is to use an LLM as a ``brain'' to reason before taking actions.
 
 \medskip
