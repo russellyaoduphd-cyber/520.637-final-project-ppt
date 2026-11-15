@@ -1,0 +1,140 @@
+\documentclass[aspectratio=169]{beamer}
+\usepackage{ctex}
+\usetheme{Warsaw}
+\usecolortheme{whale}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\definecolor{codeMuted}{RGB}{96,110,129}
+\definecolor{codeAccent}{RGB}{176,76,21}
+\newcommand{\codeline}[3]{\textcolor{codeMuted}{#1}&\hspace*{#2em}\texttt{\detokenize{#3}}\\[2pt]}
+\newcommand{\accentline}[3]{\textcolor{codeMuted}{#1}&\hspace*{#2em}\textcolor{codeAccent}{\texttt{\detokenize{#3}}}\\[2pt]}
+\title{520.637 final project ppt}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+
+\begin{frame}{Introduction}
+A popular idea in today's agent system design and robot learning is to use an LLM as a ``brain'' to reason before taking actions.
+
+\medskip
+\textbf{Why:} LLMs can interpret complex instructions, decompose long-horizon tasks, and adapt to unstructured scenarios.
+
+\medskip
+\textbf{Example:} a delivery robot told to ``bring the red box to the target zone''
+\begin{enumerate}
+  \item \textbf{Navigate} to the task region.
+  \item \textbf{Inspect} the region to find and confirm the target object.
+  \item \textbf{Pick} it up and \textbf{deliver} it to the target zone.
+\end{enumerate}
+
+\medskip
+The LLM can act as a \emph{planner} (what to do next) or a \emph{verifier} (is this the right object?), while a low-level executor carries out the actions.
+\end{frame}
+
+\begin{frame}{Problem}
+\textbf{LLM reasoning is slow and costly.}
+\begin{itemize}
+  \item \textbf{Too much reasoning delays actions.} \\
+        Reasoning at every step on ALFRED navigation: 31.5\,s of a 42.3\,s episode is LLM inference.
+  \item \textbf{Too little reasoning causes failures.} \\
+        On an abstract task-decomposition benchmark: 45.2\% success with no reasoning vs.\ 85.4\% with full reasoning.
+  \item \textbf{Existing triggers do not adapt.} \\
+        Fixed intervals or hand-crafted thresholds ignore task difficulty, execution feedback, and remaining budget.
+\end{itemize}
+
+\medskip
+Reasoning needs also vary within one task: routine stages favor direct execution, uncertain stages benefit from thinking.
+
+\medskip
+\textbf{Question:} After receiving an observation, \emph{when} should an agent think before acting, and \emph{how much} should it think?
+\end{frame}
+
+\begin{frame}{This Paper: RARRL}
+\textbf{R}esource-\textbf{A}ware \textbf{R}easoning via \textbf{R}einforcement \textbf{L}earning
+
+\medskip
+\textbf{Idea:} treat ``thinking'' as a costly action and learn when it pays off.
+\begin{itemize}
+  \item \textbf{Formulation:} reasoning control as an MDP; reward = task success $-$ latency cost.
+  \item \textbf{Method:} Train a small RL orchestration policy (PPO) decides at each step
+  \begin{itemize}
+    \item \textsc{Act} or \textsc{Think},
+    \item which role (planner / verifier),
+    \item how much budget,
+  \end{itemize}
+  from the observation, execution history, and remaining budget. \\
+  The LLM and low-level executor stay frozen.
+  \item \textbf{Results (ALFRED navigation, vs.\ full reasoning):}
+  \begin{itemize}
+    \item LLM time: 31.5\,s $\rightarrow$ 12.3\,s; tokens: 4100 $\rightarrow$ 980.
+    \item Task success: 84.0\% $\rightarrow$ 82.7\%.
+  \end{itemize}
+  \item \textbf{Robustness:} after a sudden budget cut, 74.9\% success vs.\ 61.8\% for the heuristic baseline.
+\end{itemize}
+\end{frame}
+\begin{frame}{Our Contribution}
+    \begin{itemize}
+        \item train an activation policy for an LLM in our setting based on the framework of the paper
+        \item extend the original Markov Process Decision to a partially observed one and explore via experiments
+        
+    \end{itemize}
+\end{frame}
+\begin{frame}{Framework of RARRL}
+\textbf{MDP: the orchestrator's decision problem}
+\begin{itemize}
+  \item \textbf{State} $s_t = (o_t,\, b_t,\, h_t)$: current observation, remaining budget, execution history.
+  \item \textbf{Action} $a_t \in \{\textsc{Act},\ \textsc{Think}(r, c)\}$: act directly, or invoke the LLM with role $r$ (planner / verifier) and budget level $c$.
+  \item \textbf{Transition:} \textsc{Think} lowers the failure probability of the next action, but adds latency:
+  \[
+    P_{\text{fail}}^{\text{think}}(s,a) = \bigl(1-\alpha(s)\bigr)\, P_{\text{fail}}^{\text{exec}}(s,a)
+  \]
+  \item \textbf{Reward} $r_t = r_t^{\text{task}} - \lambda\, r_t^{\text{cost}}$: task success minus reasoning cost (time or tokens).
+\end{itemize}
+
+\medskip
+\textbf{Method: learn the orchestration policy $\pi_\theta(a_t \mid s_t)$}
+\begin{itemize}
+  \item A small MLP with three heads: \textsc{Act} vs.\ \textsc{Think}, role $r$, budget $c$.
+  \item Trained with PPO + GAE to maximize $\mathbb{E}_{\pi_\theta}\bigl[\sum_{t} \gamma^t r_t\bigr]$.
+  \item The LLM and low-level executor are frozen black boxes; LLM output only serves as guidance for later actions.
+  \item Trained in an abstract task model, then transferred to ALFRED after cost calibration, without fine-tuning.
+\end{itemize}
+\end{frame}
+\begin{frame}{Main Sketch of RARRL method}
+  \begin{columns}[c]
+    \begin{column}{0.62\textwidth}
+      \centering
+      \includegraphics[width=\linewidth,keepaspectratio]{RL.png}
+    \end{column}
+    \begin{column}{0.36\textwidth}
+      \centering
+      \includegraphics[height=0.80\textheight,keepaspectratio]{figure 1.png}
+    \end{column}
+  \end{columns}
+\end{frame}
+\begin{frame}{Our training method}
+
+    
+\end{frame}
+
+\begin{frame}{Kitchen task and reasoning budget}
+    
+\end{frame}
+\begin{frame}{Learning the reasoning scheduler}
+    
+\end{frame}
+\begin{frame}{Learning the reasoning controller}
+    
+\end{frame}
+\begin{frame}{Evaluation}
+    
+\end{frame}
+\end{document}
