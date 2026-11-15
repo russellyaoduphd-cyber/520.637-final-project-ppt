@@ -401,4 +401,93 @@
   illustrates behavior and is not an independent estimate of average performance.
   Source: eval\_1.jsonl in the reproduction repository.}
 \end{frame}
+% PPO explanation: implementation mapping, followed by the actual update objective.
+% Source: zzffzz2003/rarrl-reproduction, branch nov13-ppt-materials,
+% 11月13号PPT资料/01_程序/scheduler2/{ppo.py,run.py,breakfast3d.py,sched_features.py}.
+\begin{frame}{Actor--critic in our experiment}
+  \begin{center}
+    \textbf{Observation} $o_t\in\mathbb{R}^{42}$\\[3pt]
+    Subtask cues, budget, progress, and recent execution outcomes
+  \end{center}
+
+  \medskip
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.58\textwidth}
+      \textbf{Actor:} $\pi_\theta(a_t\mid o_t)$\par\smallskip
+      Outputs probabilities over three choices:\\[4pt]
+      \textbf{0}\quad Fixed script\\[3pt]
+      \textbf{1}\quad Luna low effort, compact context\\[3pt]
+      \textbf{2}\quad Luna high effort, full context
+    \end{column}
+    \begin{column}{0.38\textwidth}
+      \textbf{Critic:} $V_\phi(o_t)$\par\smallskip
+      Outputs one number:\\[4pt]
+      the predicted remaining discounted return.\par\medskip
+      Provides a baseline for evaluating the chosen action.
+    \end{column}
+  \end{columns}
+
+  \bigskip
+  \textbf{Reward:} task completion minus failure, execution, and reasoning costs.
+
+  \medskip
+  \textcolor{structure.fg}{\textbf{PPO updates the Actor and Critic.}}\\[3pt]
+  Luna's parameters remain fixed.
+  \note{About 30--40 seconds. Both networks receive the same 42-dimensional
+  observation. It is a partial observation, not the complete simulator state.
+  The Actor outputs probabilities for the three reasoning levels. The default
+  implementation uses two gated outputs to construct these three probabilities,
+  and masks reasoning levels that the remaining budget cannot cover. During
+  training we sample an action; during evaluation we choose the most probable
+  available action. The Critic predicts a scalar remaining discounted return and
+  is only used for training. Reward includes a bonus for finishing the whole
+  task, penalties for failed attempts and fatal outcomes, and execution and
+  reasoning costs. PPO updates these two small networks, not Luna. Both networks
+  are separate MLPs with three hidden layers of width 64. The Critic predicts
+  return, not a success probability or the next kitchen state.}
+\end{frame}
+
+\begin{frame}{Updating the controller with PPO}
+  \textbf{Collect rollouts:} record $(o_t,a_t,r_t,o_{t+1},\mathrm{done}_t)$.
+  Keep the old action probabilities and value predictions.
+
+  \medskip
+  \textbf{Estimate advantages with GAE:} a positive advantage favors the chosen action.
+
+  \medskip
+  \textbf{Actor: maximize the clipped objective}
+  \[
+    L^{\mathrm{clip}}(\theta)=\mathbb{E}_t\!\left[
+      \min\!\left(\rho_t\hat A_t,\,
+      \operatorname{clip}(\rho_t,0.8,1.2)\hat A_t\right)\right],
+    \qquad
+    \rho_t=\frac{\pi_\theta(a_t\mid o_t)}{\pi_{\mathrm{old}}(a_t\mid o_t)}.
+  \]
+  $\rho_t$: new / old probability of the chosen reasoning level.\\[3pt]
+  $\hat A_t$: whether the outcome was better or worse than expected.
+
+  \medskip
+  \textbf{Critic:} fit return targets $y_t$ constructed from the rollouts,
+  \[
+    \min_\phi\;\mathbb{E}_t\bigl[(V_\phi(o_t)-y_t)^2\bigr].
+  \]
+  \textcolor{codeMuted}{512 decisions per rollout batch, 4 update epochs, minibatches of 128.}
+  \note{About 40--50 seconds. We collect experience using the current controller
+  in the abstract kitchen simulator. Eight environments contribute 64 decisions
+  each, giving 512 decisions per rollout batch. We retain old log probabilities
+  and value predictions, and use GAE to estimate advantages. The Actor update
+  uses batch-normalized advantages. The ratio compares the probability of the
+  same sampled reasoning level under the current and old policies. A positive
+  advantage encourages increasing its probability, while clipping limits the
+  incentive for large policy changes. This is not a hard guarantee that all
+  probabilities remain within 20 percent of their old values. For example,
+  successful task completion after a low-effort call can reinforce that choice
+  if its return is better than expected. The Critic fits targets equal to old
+  value predictions plus unnormalized GAE advantages. The implementation
+  minimizes the negative clipped objective plus a weighted value loss and an
+  entropy regularizer, using Adam. Each batch is reused for four epochs with
+  minibatches of 128. The equations on the slide show the two main learning
+  objectives. These updates never differentiate through the kitchen simulator
+  or through Luna.}
+\end{frame}
 \end{document}
