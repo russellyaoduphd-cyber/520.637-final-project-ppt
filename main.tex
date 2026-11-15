@@ -120,21 +120,140 @@ Reasoning needs also vary within one task: routine stages favor direct execution
     \end{column}
   \end{columns}
 \end{frame}
-\begin{frame}{Our training method}
-
-    
-\end{frame}
-
+% Experiment section: three frames, approximately one minute per frame.
+% The image is a conceptual illustration, not a screenshot from AI2-THOR.
+% Sources: zzffzz2003/rarrl-reproduction, branch nov13-ppt-materials,
+% 11月13号PPT资料/01_程序/code3d_seg/segments.py and segment_env.py;
+% 11月13号PPT资料/02_数据/抽象环境/calibration3d.json.
 \begin{frame}{Kitchen task and reasoning budget}
-    
+  \textbf{AI2-THOR kitchen:} each episode combines 3--4 recipes.\\[2pt]
+  The controller chooses a reasoning level before each subtask.
+
+  \medskip
+  \begin{columns}[c,onlytextwidth]
+    \begin{column}{0.65\textwidth}
+      \centering
+      \includegraphics[width=\linewidth]{illustration figure.png}
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      \textbf{Routine steps}\\[3pt]
+      Fixed scripts handle the normal recipe.
+
+      \medskip
+      \textbf{Unexpected conditions}\\[3pt]
+      LLM planning can address hazards, but adds cost and may introduce errors.
+    \end{column}
+  \end{columns}
+
+  \medskip
+  \textbf{Limited budget:} approximately 1,400--4,100 tokens per episode.
+  \note{About 60 seconds. Our robot prepares several dishes in a simulated kitchen.
+  Each recipe is divided into subtasks, such as taking a potato, placing it in the
+  microwave, heating it, and putting it on a plate. A fixed script handles the
+  routine sequence. If a fork is already inside the microwave, following the
+  script through heating triggers a rule-defined safety violation. Calling Luna
+  may resolve the problem, but consumes tokens and can introduce planning errors.
+  The budget cannot cover reasoning at every subtask. We also add decoys, such as
+  an apple in the microwave, so an extra object does not always imply a severe
+  hazard. The picture is a conceptual illustration.}
 \end{frame}
-\begin{frame}{Learning the reasoning scheduler}
-    
+
+% Sources: scheduler2/sched_features.py, ppo.py, run.py and breakfast3d.py;
+% code3d_seg/obs3d.py, segment_env.py and eval3d.py in the same experiment folder.
+\begin{frame}{Learning the Reasoning Controller}
+  \begin{columns}[c,onlytextwidth]
+    \begin{column}{0.29\textwidth}
+      \textbf{Inputs}\par\smallskip
+      Current subtask cues\par\smallskip
+      Budget and progress\par\smallskip
+      Recent execution results
+    \end{column}
+    \begin{column}{0.24\textwidth}
+      \centering
+      {\large\color{structure.fg}\textbf{Reasoning\\Controller}}\par
+      \smallskip
+      Small policy network\par
+      trained with PPO
+    \end{column}
+    \begin{column}{0.43\textwidth}
+      \textbf{One choice per subtask attempt}\par\smallskip
+      \textbf{0}\quad Fixed script\par\smallskip
+      \textbf{1}\quad Luna low effort\\
+      \hspace*{1.6em}Compact context\par\smallskip
+      \textbf{2}\quad Luna high effort\\
+      \hspace*{1.6em}Full context
+    \end{column}
+  \end{columns}
+
+  \bigskip
+  \textbf{Reward:} task completion, minus failure and computation costs.
+
+  \medskip
+  \textbf{Training:} PPO in a simulator calibrated from 3D measurements.\\[3pt]
+  \textbf{Evaluation:} freeze the controller and run actual LLM calls in 3D.
+
+  \medskip
+  \textcolor{codeMuted}{Luna's parameters remain fixed throughout.}
+  \note{About 60 seconds. We train a small Reasoning Controller. It receives a
+  42-dimensional observation containing subtask cues, such as whether an appliance
+  contains another object or a vessel is dirty, together with budget, progress,
+  and recent execution results. The controller chooses a fixed script, Luna with
+  low reasoning effort and compact context, or Luna with high reasoning effort
+  and full context. Level 2 is one high-effort planning call, not a separate
+  planner-verifier sequence. We first measure outcomes and token costs in 3D,
+  calibrate a stochastic simulator, and train PPO there. Reward favors completing
+  the whole task while penalizing failures and execution and reasoning costs.
+  We then freeze the controller and evaluate actual execution in 3D. Luna is
+  never fine-tuned.}
 \end{frame}
-\begin{frame}{Learning the reasoning controller}
-    
-\end{frame}
-\begin{frame}{Evaluation}
-    
+
+% Results: 11月13号PPT资料/04_已有总结/第四步_3D对比_去掉双蛋任务.md.
+% Task filtering: 60 candidate tasks, 24 removed by recipe composition because
+% fried_egg and egg_to_bowl compete for the single egg, leaving 36 paired tasks.
+% Calibration overlap: calib_0.jsonl and calib_1.jsonl include test kitchens
+% 3, 6, 10 and 13. These kitchens are held out from PPO training trajectories,
+% but not all are held out from simulator calibration.
+\begin{frame}{3D evaluation}
+  \textbf{36 tasks.} The same task configurations for all three policies.
+
+  \bigskip
+  \begin{center}
+    \renewcommand{\arraystretch}{1.45}
+    \setlength{\tabcolsep}{10pt}
+    \begin{tabular}{@{}lrr@{}}
+      \hline
+      \textbf{Policy} & \textbf{Task success} & \textbf{Tokens / episode} \\
+      \hline
+      Fixed scripts only & 28\% & 0 \\
+      Tuned feature rule & 67\% & 1,547 \\
+      \textbf{PPO Reasoning Controller} & \textbf{72\%} & \textbf{1,166} \\
+      \hline
+    \end{tabular}
+  \end{center}
+
+  \medskip
+  \begin{center}
+    {\Large\color{structure.fg}\textbf{25\% fewer tokens}}\\[4pt]
+    than the tuned feature rule
+  \end{center}
+
+  \medskip
+  {\small
+  One PPO seed in 3D. Success-rate difference vs.\ tuned rule: not statistically significant.\par\smallskip
+  \textcolor{codeMuted}{Test kitchens are held out from PPO training, with partial overlap in calibration data.}}
+  \note{About 60 seconds. On 36 paired test tasks, fixed scripts succeed in 28
+  percent of episodes. The tuned feature rule reaches 67 percent, and our frozen
+  PPO Reasoning Controller reaches 72 percent. That success-rate difference is
+  not statistically significant, so the main observation is the lower inference
+  cost: 1,166 tokens per episode versus 1,547, a reduction of about 25 percent.
+  The experiment provides preliminary evidence that learned reasoning control
+  can reduce token use. A larger evaluation with multiple PPO seeds is needed
+  to establish a consistent success-rate improvement.
+  For questions: exact success counts are 10/36, 24/36, and 26/36. The reported
+  paired bootstrap 95 percent interval for PPO minus the tuned rule is -8.3 to
+  +19.4 percentage points. The controller is medium-s100, selected by validation
+  return. Rules are also tuned on validation tasks. Test kitchens do not appear
+  in PPO training trajectories, but some appear in the 3D calibration data.
+  Strict calibration holdout is future work.}
 \end{frame}
 \end{document}
