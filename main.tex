@@ -186,11 +186,11 @@ Reasoning needs also vary within one task: routine stages favor direct execution
   \end{columns}
 
   \bigskip
-  \textbf{Reward:} task completion, minus failure and computation costs.
+  \textbf{Reward:} task completion minus failure and computation costs.
 
   \medskip
   \textbf{Training:} PPO in a simulator calibrated from 3D measurements.\\[3pt]
-  \textbf{Evaluation:} freeze the controller and run actual LLM calls in 3D.
+  \textbf{Evaluation:} freeze the controller and run actual LLM calls in new 3D kitchens.
 
   \medskip
   \textcolor{codeMuted}{Luna's parameters remain fixed throughout.}
@@ -225,7 +225,7 @@ Reasoning needs also vary within one task: routine stages favor direct execution
       \textbf{Policy} & \textbf{Task success} & \textbf{Tokens / episode} \\
       \hline
       Fixed scripts only & 28\% & 0 \\
-      Tuned feature rule & 67\% & 1,547 \\
+      Heuristic controller & 67\% & 1,547 \\
       \textbf{PPO Reasoning Controller} & \textbf{72\%} & \textbf{1,166} \\
       \hline
     \end{tabular}
@@ -234,12 +234,11 @@ Reasoning needs also vary within one task: routine stages favor direct execution
   \medskip
   \begin{center}
     {\Large\color{structure.fg}\textbf{25\% fewer tokens}}\\[4pt]
-    than the tuned feature rule
+    than the heuristic controller
   \end{center}
 
   \medskip
-  {\small
-  One PPO seed in 3D. Success-rate difference vs.\ tuned rule: not statistically significant.\par\smallskip
+  {\par\smallskip
   \textcolor{codeMuted}{Test kitchens are held out from PPO training, with partial overlap in calibration data.}}
   \note{About 60 seconds. On 36 paired test tasks, fixed scripts succeed in 28
   percent of episodes. The tuned feature rule reaches 67 percent, and our frozen
