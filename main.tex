@@ -20,6 +20,75 @@
 
 \maketitle
 
+\begin{frame}{Introduction}
+    \centering
+
+    \begin{columns}[T,onlytextwidth]
+
+        % Left: production / crafting
+        \begin{column}{0.48\textwidth}
+            \centering
+            {\Large\bfseries Think is good\par}
+
+            \vspace{0.5cm}
+
+            \parbox[c][0.45\textheight][c]{\linewidth}{%
+                \centering
+                \IfFileExists{figure1.png}{%
+                    \includegraphics[
+                        width=\linewidth,
+                        height=0.45\textheight,
+                        keepaspectratio
+                    ]{figure1.png}%
+                }{%
+                    \fbox{%
+                        \parbox[c][0.40\textheight][c]{0.92\linewidth}{%
+                            \centering
+                            \texttt{figure1.png}\\[0.5em]
+                            \small Production / Crafting
+                        }%
+                    }%
+                }%
+            }
+        \end{column}
+
+        % Right: escaping from monsters
+        \begin{column}{0.48\textwidth}
+            \centering
+            {\Large\bfseries Think is bad\par}
+
+            \vspace{0.5cm}
+
+            \parbox[c][0.45\textheight][c]{\linewidth}{%
+                \centering
+                \IfFileExists{figure2.png}{%
+                    \includegraphics[
+                        width=\linewidth,
+                        height=0.45\textheight,
+                        keepaspectratio
+                    ]{figure2.png}%
+                }{%
+                    \fbox{%
+                        \parbox[c][0.40\textheight][c]{0.92\linewidth}{%
+                            \centering
+                            \texttt{figure2.png}\\[0.5em]
+                            \small Escaping from Monsters
+                        }%
+                    }%
+                }%
+            }
+        \end{column}
+
+    \end{columns}
+
+    \vspace{0.7cm}
+
+    {\Large\bfseries\color{red!75!black}
+        We should decide when to think！
+        \par
+    }
+
+\end{frame}
 
 \begin{frame}{Introduction}
 A popular idea in today's agent system design and robot learning is to use an LLM as a ``brain'' to reason before taking actions.
