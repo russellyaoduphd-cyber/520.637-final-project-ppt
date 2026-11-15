@@ -324,4 +324,66 @@ Reasoning needs also vary within one task: routine stages favor direct execution
   in PPO training trajectories, but some appear in the 3D calibration data.
   Strict calibration holdout is future work.}
 \end{frame}
+% Additional evidence: Figures 5, 7 and 3 from the RARRL reproduction.
+% Source: zzffzz2003/rarrl-reproduction, branch nov13-ppt-materials,
+% 11月13号PPT资料/03_图. Replotted with the selected policies and updated names.
+\begin{frame}{Where does the controller use reasoning?}
+  \textbf{3D evaluation:} 36 tasks, grouped by the conditions at each step.
+
+  \smallskip
+  \begin{center}
+    \includegraphics[width=\linewidth,height=0.67\textheight,keepaspectratio]{figures/fig5_reasoning_allocation.png}
+  \end{center}
+  \textbf{Fewer calls on decoy-only steps:} 25\% with PPO vs.\ 54\% with the heuristic.
+  \note{Figure 5, simplified to the two controllers in the main comparison.
+  We examine where each controller calls the LLM. On steps associated with real
+  hazards, calling rates are similar: 37 percent for PPO and 36 percent for the
+  heuristic controller. On decoy-only steps, the rate drops from 54 to 25 percent.
+  This helps explain the lower token cost. These percentages describe calls per
+  observed step attempt, not hazard classification accuracy or hazard resolution
+  rates. The real-hazard category excludes the globally visible stove-left-on
+  condition, following the original figure. The displayed zero for normal steps
+  is rounded. Source: plot\_eval3d.py and the eval/evalx JSONL files in the
+  reproduction repository.}
+\end{frame}
+
+\begin{frame}{When does learned reasoning control help?}
+  \textbf{Simulation results.} Blue labels show PPO's advantage in percentage points.
+
+  \smallskip
+  \begin{center}
+    \includegraphics[width=\linewidth,height=0.73\textheight,keepaspectratio]{figures/fig7_budget_and_hazards.png}
+  \end{center}
+  \textbf{Larger gains when the budget is tight or hazards are frequent.}
+  \note{Figure 7, showing the same PPO and feature-rule results with updated names.
+  These are abstract-simulator results, not additional 3D trials. At half the main
+  budget, PPO exceeds the heuristic controller by 12.7 percentage points. At four
+  times the budget, the gap is 2.9 points. As hazard frequency rises from low to
+  high, the gap grows from 3.3 to 15.5 points. This suggests that learned reasoning
+  control is especially useful when limited resources force difficult choices.
+  Different settings use their own training runs and validation-tuned rules.
+  These are mean performance differences, without a statistical-significance
+  claim. Source: fig6\_fig7\_data.json and plot\_extra.py in the reproduction
+  repository.}
+\end{frame}
+
+\begin{frame}{One task, three controllers}
+  A fork in the microwave, with a dirty bowl and extra clean mugs as decoys.
+
+  \smallskip
+  \begin{center}
+    \includegraphics[width=\linewidth,height=0.73\textheight,keepaspectratio]{figures/fig3_episode_timeline.png}
+  \end{center}
+  \textbf{In this example, PPO calls Luna once, at heating, and completes the task.}
+  \note{Figure 3, restricted to fixed scripts, the heuristic controller, and PPO.
+  This is recorded task 74000019 in kitchen 6, chosen as an illustrative case.
+  Fixed scripts fail when the microwave starts with a fork inside. The heuristic
+  controller calls Luna twice, once at the dirty-bowl decoy and once at heating.
+  PPO skips the decoy and calls Luna at heating. Both controllers complete the
+  task. The gray, light-blue, and dark-blue cells indicate levels 0, 1, and 2.
+  Orange outlines mark steps associated with the real hazard. No selected row
+  contains a retry, so columns align to the same subtasks. This one example
+  illustrates behavior and is not an independent estimate of average performance.
+  Source: eval\_1.jsonl in the reproduction repository.}
+\end{frame}
 \end{document}
