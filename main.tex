@@ -404,17 +404,21 @@ cost in units of 100 tokens.
 \end{frame}
 
 \begin{frame}{3D evaluation}
-  \textbf{36 tasks.} The same task configurations for all three policies.
+  \textbf{36 tasks.} The same task configurations for all seven policies.
 
   \bigskip
   \begin{center}
-    \renewcommand{\arraystretch}{1.45}
-    \setlength{\tabcolsep}{10pt}
+    \renewcommand{\arraystretch}{1.10}
+    \setlength{\tabcolsep}{8pt}
     \begin{tabular}{@{}lrr@{}}
       \hline
       \textbf{Policy} & \textbf{Task success} & \textbf{Tokens / episode} \\
       \hline
       Fixed scripts only & 28\% & 0 \\
+      Always reason (budgeted) & 47\% & 2,316 \\
+      Always reason (unbudgeted) & 56\% & 16,836 \\
+      Simple heuristic & 44\% & 2,293 \\
+      Step-type rule & 47\% & 2,107 \\
       Heuristic controller & 67\% & 1,547 \\
       \textbf{PPO Reasoning Controller} & \textbf{72\%} & \textbf{1,166} \\
       \hline
@@ -428,9 +432,13 @@ cost in units of 100 tokens.
   \end{center}
 
   \medskip
-  {\par\smallskip
+  {\small\par\smallskip
   \textcolor{codeMuted}{Test kitchens are held out from PPO training, with partial overlap in calibration data.}}
-  \note{About 60 seconds. On 36 paired test tasks, fixed scripts succeed in 28
+  \note{All seven policies are evaluated on the same 36 tasks. The unbudgeted
+  always-reason baseline is exempt from the token limit. Other rows share the
+  task budgets. Added success counts are 17/36 for budgeted always-reason,
+  20/36 for unbudgeted always-reason, 16/36 for the simple heuristic, and
+  17/36 for the step-type rule. About 60 seconds. On 36 paired test tasks, fixed scripts succeed in 28
   percent of episodes. The tuned feature rule reaches 67 percent, and our frozen
   PPO Reasoning Controller reaches 72 percent. That success-rate difference is
   not statistically significant, so the main observation is the lower inference
@@ -468,6 +476,28 @@ cost in units of 100 tokens.
   reproduction repository.}
 \end{frame}
 
+\begin{frame}{One task, three controllers}
+  A fork in the microwave, with a dirty bowl and extra clean mugs as decoys.
+
+  \smallskip
+  \begin{center}
+    \includegraphics[width=\linewidth,height=0.73\textheight,keepaspectratio]{figures/fig3_episode_timeline.png}
+  \end{center}
+  \textbf{In this example, PPO calls Luna once, at heating, and completes the task.}
+  \note{Figure 3, restricted to fixed scripts, the heuristic controller, and PPO.
+  This is recorded task 74000019 in kitchen 6, chosen as an illustrative case.
+  Fixed scripts fail when the microwave starts with a fork inside. The heuristic
+  controller calls Luna twice, once at the dirty-bowl decoy and once at heating.
+  PPO skips the decoy and calls Luna at heating. Both controllers complete the
+  task. The gray, light-blue, and dark-blue cells indicate levels 0, 1, and 2.
+  Solid orange outlines mark steps associated with the real hazard. Dashed
+  purple outlines mark decoy-only steps: egg into bowl, mug into machine, and
+  brew. Fixed scripts stop before reaching the mug-related decoys. No selected row
+  contains a retry, so columns align to the same subtasks. This one example
+  illustrates behavior and is not an independent estimate of average performance.
+  Source: eval\_1.jsonl in the reproduction repository.}
+\end{frame}
+
 \begin{frame}{When does learned reasoning control help?}
   \textbf{Simulation results.} Blue labels show PPO's advantage in percentage points.
 
@@ -486,26 +516,6 @@ cost in units of 100 tokens.
   These are mean performance differences, without a statistical-significance
   claim. Source: fig6\_fig7\_data.json and plot\_extra.py in the reproduction
   repository.}
-\end{frame}
-
-\begin{frame}{One task, three controllers}
-  A fork in the microwave, with a dirty bowl and extra clean mugs as decoys.
-
-  \smallskip
-  \begin{center}
-    \includegraphics[width=\linewidth,height=0.73\textheight,keepaspectratio]{figures/fig3_episode_timeline.png}
-  \end{center}
-  \textbf{In this example, PPO calls Luna once, at heating, and completes the task.}
-  \note{Figure 3, restricted to fixed scripts, the heuristic controller, and PPO.
-  This is recorded task 74000019 in kitchen 6, chosen as an illustrative case.
-  Fixed scripts fail when the microwave starts with a fork inside. The heuristic
-  controller calls Luna twice, once at the dirty-bowl decoy and once at heating.
-  PPO skips the decoy and calls Luna at heating. Both controllers complete the
-  task. The gray, light-blue, and dark-blue cells indicate levels 0, 1, and 2.
-  Orange outlines mark steps associated with the real hazard. No selected row
-  contains a retry, so columns align to the same subtasks. This one example
-  illustrates behavior and is not an independent estimate of average performance.
-  Source: eval\_1.jsonl in the reproduction repository.}
 \end{frame}
 % PPO explanation: implementation mapping, followed by the actual update objective.
 % Source: zzffzz2003/rarrl-reproduction, branch nov13-ppt-materials,
