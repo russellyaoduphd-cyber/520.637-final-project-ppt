@@ -409,18 +409,18 @@ cost in units of 100 tokens.
   \bigskip
   \begin{center}
     \renewcommand{\arraystretch}{1.10}
-    \setlength{\tabcolsep}{8pt}
-    \begin{tabular}{@{}lrr@{}}
+    \setlength{\tabcolsep}{4pt}
+    \begin{tabular}{@{}lrrr@{}}
       \hline
-      \textbf{Policy} & \textbf{Task success} & \textbf{Tokens / episode} \\
+      \textbf{Policy} & \textbf{Task success} & \textbf{Tokens / episode} & \textbf{Time / episode (s)} \\
       \hline
-      Fixed scripts only & 28\% & 0 \\
-      Always reason (budgeted) & 47\% & 2,316 \\
-      Always reason (unbudgeted) & 56\% & 16,836 \\
-      Simple heuristic & 44\% & 2,293 \\
-      Step-type rule & 47\% & 2,107 \\
-      Heuristic controller & 67\% & 1,547 \\
-      \textbf{PPO Reasoning Controller} & \textbf{72\%} & \textbf{1,166} \\
+      Fixed scripts only & 28\% & 0 & 11.6 \\
+      Always reason (budgeted) & 47\% & 2,316 & 16.3 \\
+      Always reason (unbudgeted) & 56\% & 16,836 & 54.6 \\
+      Simple heuristic & 44\% & 2,293 & 18.0 \\
+      Step-type rule & 47\% & 2,107 & 19.7 \\
+      Heuristic controller & 67\% & 1,547 & 23.2 \\
+      \textbf{PPO Reasoning Controller} & \textbf{72\%} & \textbf{1,166} & \textbf{18.9} \\
       \hline
     \end{tabular}
   \end{center}
@@ -434,7 +434,17 @@ cost in units of 100 tokens.
   \medskip
   {\small\par\smallskip
   \textcolor{codeMuted}{Test kitchens are held out from PPO training, with partial overlap in calibration data.}}
-  \note{All seven policies are evaluated on the same 36 tasks. The unbudgeted
+  % Time source: reproduction / 11月13号PPT资料/02_数据/3D评估/episode_time.json.
+  \note{Time per episode is mean wall-clock time in seconds, including execution
+  and waiting for Luna, over all 36 episodes, including failures. Values come
+  from the wall field in episode\_time.json and are rounded to one decimal.
+  Mean time is 23.17 seconds for the heuristic controller and 18.94 seconds for
+  PPO, about 18 percent less in these runs. Total time is derived from evaluation
+  log timestamps, not estimated from tokens. The separate LLM-only timing
+  estimates are not used in this table. Three evaluation processes ran on the
+  same four-core cloud machine. These descriptive timing averages do not imply
+  that every successful task runs 18 percent faster.
+  All seven policies are evaluated on the same 36 tasks. The unbudgeted
   always-reason baseline is exempt from the token limit. Other rows share the
   task budgets. Added success counts are 17/36 for budgeted always-reason,
   20/36 for unbudgeted always-reason, 16/36 for the simple heuristic, and
