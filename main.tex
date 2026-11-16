@@ -2,6 +2,8 @@
 \usepackage{ctex}
 \usetheme{Warsaw}
 \usecolortheme{whale}
+\setbeamertemplate{footline}{}             % 去掉底部标题栏
+\setbeamertemplate{navigation symbols}{}   % 去掉右下角导航按钮
 \usepackage{graphicx}
 \usepackage{amsmath}
 \usepackage{amsthm}
@@ -12,9 +14,8 @@
 \definecolor{codeAccent}{RGB}{176,76,21}
 \newcommand{\codeline}[3]{\textcolor{codeMuted}{#1}&\hspace*{#2em}\texttt{\detokenize{#3}}\\[2pt]}
 \newcommand{\accentline}[3]{\textcolor{codeMuted}{#1}&\hspace*{#2em}\textcolor{codeAccent}{\texttt{\detokenize{#3}}}\\[2pt]}
-\title{520.637 final project ppt}
-\author{}
-\date{}
+\title{Final Project}
+\author{Qining Shen \and Ruoyun Zhang \and Zhufeng Zhao}\date{}
 
 \begin{document}
 
@@ -145,65 +146,72 @@
 
 \end{frame}
 
+\begin{frame}[t]{Our Starting Point: RARRL}
 
+    \textbf{Resource-Aware Reasoning via Reinforcement Learning}
 
-\begin{frame}{This Paper: RARRL}
-\textbf{R}esource-\textbf{A}ware \textbf{R}easoning via \textbf{R}einforcement \textbf{L}earning
+    \vspace{0.25cm}
 
-\medskip
-\textbf{Idea:} treat ``thinking'' as a costly action and learn when it pays off.
-\begin{itemize}
-  \item \textbf{Formulation:} reasoning control as an MDP; reward = task success $-$ latency cost.
-  \item \textbf{Method:} Train a small RL orchestration policy (PPO) decides at each step
-  \begin{itemize}
-    \item \textsc{Act} or \textsc{Think},
-    \item which role (planner / verifier),
-    \item how much budget,
-  \end{itemize}
-  from the observation, execution history, and remaining budget. \\
-  The LLM and low-level executor stay frozen.
-  \item \textbf{Results (ALFRED navigation, vs.\ full reasoning):}
-  \begin{itemize}
-    \item LLM time: 31.5\,s $\rightarrow$ 12.3\,s; tokens: 4100 $\rightarrow$ 980.
-    \item Task success: 84.0\% $\rightarrow$ 82.7\%.
-  \end{itemize}
-  \item \textbf{Robustness:} after a sudden budget cut, 74.9\% success vs.\ 61.8\% for the heuristic baseline.
-\end{itemize}
+    \textbf{Idea:} Treat ``thinking'' as a costly action
+    and learn when it pays off.
+
+    \vspace{0.15cm}
+
+    \textbf{Formulation:} Reasoning control as an MDP.\\[0.1em]
+    \textbf{Reward:} Task success $-$ latency cost.
+
+    \vspace{0.3cm}
+
+    \begin{columns}[T,onlytextwidth]
+
+        % Lower left: concise method
+        \begin{column}{0.35\textwidth}
+            \textbf{Method}
+            \begin{itemize}
+                \setlength{\itemsep}{0.4em}
+                \item PPO learns to choose
+                      \textsc{Think} or \textsc{Act}.
+                \item Decisions use observations,
+                      history, and budget.
+                \item The LLM and executor
+                      remain frozen.
+            \end{itemize}
+        \end{column}
+
+        % Lower right: three-module interaction
+        \begin{column}{0.63\textwidth}
+            \centering
+            \includegraphics[
+                width=\linewidth,
+                height=0.54\textheight,
+                keepaspectratio
+            ]{rarrl_triangle.png}
+        \end{column}
+
+    \end{columns}
+
 \end{frame}
+
+
 
 \begin{frame}{Framework of RARRL}
 \textbf{MDP: the orchestrator's decision problem}
 \begin{itemize}
   \item \textbf{State} $s_t = (o_t,\, b_t,\, h_t)$: current observation, remaining budget, execution history.
   \item \textbf{Action} $a_t \in \{\textsc{Act},\ \textsc{Think}(r, c)\}$: act directly, or invoke the LLM with role $r$ (planner / verifier) and budget level $c$.
-  \item \textbf{Transition:} \textsc{Think} lowers the failure probability of the next action, but adds latency:
-  \[
-    P_{\text{fail}}^{\text{think}}(s,a) = \bigl(1-\alpha(s)\bigr)\, P_{\text{fail}}^{\text{exec}}(s,a)
-  \]
+  \item \textbf{Transition:} Unknown but we assume think lowers the failure probability of the next action, but adds latency:
   \item \textbf{Reward} $r_t = r_t^{\text{task}} - \lambda\, r_t^{\text{cost}}$: task success minus reasoning cost (time or tokens).
 \end{itemize}
-
 \medskip
 \textbf{Method: learn the orchestration policy $\pi_\theta(a_t \mid s_t)$}
 \begin{itemize}
   \item A small MLP with three heads: \textsc{Act} vs.\ \textsc{Think}, role $r$, budget $c$.
   \item Trained with PPO + GAE to maximize $\mathbb{E}_{\pi_\theta}\bigl[\sum_{t} \gamma^t r_t\bigr]$.
-  \item The LLM and low-level executor are frozen black boxes; LLM output only serves as guidance for later actions.
+  \item The LLM and low-level executor are frozen black boxes.
   \item Trained in an abstract task model, then transferred to ALFRED after cost calibration, without fine-tuning.
 \end{itemize}
 \end{frame}
-\begin{frame}{Main Sketch of RARRL method}
-  \begin{columns}[c]
-    \begin{column}{0.62\textwidth}
-      \centering
-      \includegraphics[width=\linewidth,keepaspectratio]{RL.png}
-    \end{column}
-    \begin{column}{0.36\textwidth}
-      \centering
-      \includegraphics[height=0.80\textheight,keepaspectratio]{figure 1.png}
-    \end{column}
-  \end{columns}
-\end{frame}
+
 % Experiment section: three frames, approximately one minute per frame.
 % The image is a conceptual illustration, not a screenshot from AI2-THOR.
 % Sources: zzffzz2003/rarrl-reproduction, branch nov13-ppt-materials,
@@ -297,6 +305,104 @@
 % Calibration overlap: calib_0.jsonl and calib_1.jsonl include test kitchens
 % 3, 6, 10 and 13. These kitchens are held out from PPO training trajectories,
 % but not all are held out from simulator calibration.
+
+\begin{frame}{Actor--critic in our experiment}
+  \begin{center}
+    \textbf{Observation} $o_t\in\mathbb{R}^{42}$\\[3pt]
+    Subtask cues, budget, progress, and recent execution outcomes
+  \end{center}
+
+  \medskip
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.58\textwidth}
+      \textbf{Actor:} $\pi_\theta(a_t\mid o_t)$\par\smallskip
+      Outputs probabilities over three choices:\\[4pt]
+      \textbf{0}\quad Fixed script\\[3pt]
+      \textbf{1}\quad Luna low effort, compact context\\[3pt]
+      \textbf{2}\quad Luna high effort, full context
+    \end{column}
+    \begin{column}{0.38\textwidth}
+      \textbf{Critic:} $V_\phi(o_t)$\par\smallskip
+      Outputs one number:\\[4pt]
+      the predicted remaining discounted return.\par\medskip
+      Provides a baseline for evaluating the chosen action.
+    \end{column}
+  \end{columns}
+
+  \bigskip
+  \textbf{Reward}
+\[
+r_t =
+\mathbf{1}\{\text{task completed at }t\}
+- 0.5\,\mathbf{1}\{e_t=\text{redo}\}
+- 1.5\,\mathbf{1}\{e_t=\text{fatal}\}
+- \frac{1+c_t}{400},
+\]
+where $e_t\in\{\text{ok},\text{redo},\text{fatal}\}$ is the
+current subtask attempt's outcome, and $c_t$ is the reasoning
+cost in units of 100 tokens.
+
+  \medskip
+  \textcolor{structure.fg}{\textbf{PPO updates the Actor and Critic.}}\\[3pt]
+  Luna's parameters remain fixed.
+  \note{About 30--40 seconds. Both networks receive the same 42-dimensional
+  observation. It is a partial observation, not the complete simulator state.
+  The Actor outputs probabilities for the three reasoning levels. The default
+  implementation uses two gated outputs to construct these three probabilities,
+  and masks reasoning levels that the remaining budget cannot cover. During
+  training we sample an action; during evaluation we choose the most probable
+  available action. The Critic predicts a scalar remaining discounted return and
+  is only used for training. Reward includes a bonus for finishing the whole
+  task, penalties for failed attempts and fatal outcomes, and execution and
+  reasoning costs. PPO updates these two small networks, not Luna. Both networks
+  are separate MLPs with three hidden layers of width 64. The Critic predicts
+  return, not a success probability or the next kitchen state.}
+\end{frame}
+
+\begin{frame}{Updating the controller with PPO}
+  \textbf{Collect rollouts:} record $(o_t,a_t,r_t,o_{t+1},d_t)$.
+  Keep the old action probabilities and value predictions.
+
+  \medskip
+  \textbf{Estimate advantages with GAE:} a positive advantage favors the chosen action.
+
+  \medskip
+  \textbf{Actor: maximize the clipped objective}
+  \[
+    L^{\mathrm{clip}}(\theta)=\mathbb{E}_t\!\left[
+      \min\!\left(\rho_t\hat A_t,\,
+      \operatorname{clip}(\rho_t,0.8,1.2)\hat A_t\right)\right],
+    \qquad
+    \rho_t=\frac{\pi_\theta(a_t\mid o_t)}{\pi_{\mathrm{old}}(a_t\mid o_t)}.
+  \]
+  $\rho_t$: new / old probability of the chosen reasoning level.\\[3pt]
+  $\hat A_t$: whether the outcome was better or worse than expected.
+
+  \medskip
+  \textbf{Critic:} fit return targets $y_t$ constructed from the rollouts,
+  \[
+    \min_\phi\;\mathbb{E}_t\bigl[(V_\phi(o_t)-y_t)^2\bigr].
+  \]
+  
+  \note{About 40--50 seconds. We collect experience using the current controller
+  in the abstract kitchen simulator. Eight environments contribute 64 decisions
+  each, giving 512 decisions per rollout batch. We retain old log probabilities
+  and value predictions, and use GAE to estimate advantages. The Actor update
+  uses batch-normalized advantages. The ratio compares the probability of the
+  same sampled reasoning level under the current and old policies. A positive
+  advantage encourages increasing its probability, while clipping limits the
+  incentive for large policy changes. This is not a hard guarantee that all
+  probabilities remain within 20 percent of their old values. For example,
+  successful task completion after a low-effort call can reinforce that choice
+  if its return is better than expected. The Critic fits targets equal to old
+  value predictions plus unnormalized GAE advantages. The implementation
+  minimizes the negative clipped objective plus a weighted value loss and an
+  entropy regularizer, using Adam. Each batch is reused for four epochs with
+  minibatches of 128. The equations on the slide show the two main learning
+  objectives. These updates never differentiate through the kitchen simulator
+  or through Luna.}
+\end{frame}
+
 \begin{frame}{3D evaluation}
   \textbf{36 tasks.} The same task configurations for all three policies.
 
@@ -404,90 +510,25 @@
 % PPO explanation: implementation mapping, followed by the actual update objective.
 % Source: zzffzz2003/rarrl-reproduction, branch nov13-ppt-materials,
 % 11月13号PPT资料/01_程序/scheduler2/{ppo.py,run.py,breakfast3d.py,sched_features.py}.
-\begin{frame}{Actor--critic in our experiment}
-  \begin{center}
-    \textbf{Observation} $o_t\in\mathbb{R}^{42}$\\[3pt]
-    Subtask cues, budget, progress, and recent execution outcomes
-  \end{center}
 
-  \medskip
-  \begin{columns}[T,onlytextwidth]
-    \begin{column}{0.58\textwidth}
-      \textbf{Actor:} $\pi_\theta(a_t\mid o_t)$\par\smallskip
-      Outputs probabilities over three choices:\\[4pt]
-      \textbf{0}\quad Fixed script\\[3pt]
-      \textbf{1}\quad Luna low effort, compact context\\[3pt]
-      \textbf{2}\quad Luna high effort, full context
-    \end{column}
-    \begin{column}{0.38\textwidth}
-      \textbf{Critic:} $V_\phi(o_t)$\par\smallskip
-      Outputs one number:\\[4pt]
-      the predicted remaining discounted return.\par\medskip
-      Provides a baseline for evaluating the chosen action.
-    \end{column}
-  \end{columns}
+\begin{frame}{Conclusion}
+  \begin{itemize}
+    \item \textbf{Reasoning involves a trade-off.}
+    LLM reasoning can handle unexpected situations,
+    but consumes resources and may introduce execution errors.
 
-  \bigskip
-  \textbf{Reward:} task completion minus failure, execution, and reasoning costs.
+    \medskip
+    \item \textbf{Reasoning allocation can be learned.}
+    Following the RARRL framework, we use PPO to train
+    a controller that decides when and how much to reason,
+    while keeping the LLM frozen.
 
-  \medskip
-  \textcolor{structure.fg}{\textbf{PPO updates the Actor and Critic.}}\\[3pt]
-  Luna's parameters remain fixed.
-  \note{About 30--40 seconds. Both networks receive the same 42-dimensional
-  observation. It is a partial observation, not the complete simulator state.
-  The Actor outputs probabilities for the three reasoning levels. The default
-  implementation uses two gated outputs to construct these three probabilities,
-  and masks reasoning levels that the remaining budget cannot cover. During
-  training we sample an action; during evaluation we choose the most probable
-  available action. The Critic predicts a scalar remaining discounted return and
-  is only used for training. Reward includes a bonus for finishing the whole
-  task, penalties for failed attempts and fatal outcomes, and execution and
-  reasoning costs. PPO updates these two small networks, not Luna. Both networks
-  are separate MLPs with three hidden layers of width 64. The Critic predicts
-  return, not a success probability or the next kitchen state.}
-\end{frame}
-
-\begin{frame}{Updating the controller with PPO}
-  \textbf{Collect rollouts:} record $(o_t,a_t,r_t,o_{t+1},\mathrm{done}_t)$.
-  Keep the old action probabilities and value predictions.
-
-  \medskip
-  \textbf{Estimate advantages with GAE:} a positive advantage favors the chosen action.
-
-  \medskip
-  \textbf{Actor: maximize the clipped objective}
-  \[
-    L^{\mathrm{clip}}(\theta)=\mathbb{E}_t\!\left[
-      \min\!\left(\rho_t\hat A_t,\,
-      \operatorname{clip}(\rho_t,0.8,1.2)\hat A_t\right)\right],
-    \qquad
-    \rho_t=\frac{\pi_\theta(a_t\mid o_t)}{\pi_{\mathrm{old}}(a_t\mid o_t)}.
-  \]
-  $\rho_t$: new / old probability of the chosen reasoning level.\\[3pt]
-  $\hat A_t$: whether the outcome was better or worse than expected.
-
-  \medskip
-  \textbf{Critic:} fit return targets $y_t$ constructed from the rollouts,
-  \[
-    \min_\phi\;\mathbb{E}_t\bigl[(V_\phi(o_t)-y_t)^2\bigr].
-  \]
-  \textcolor{codeMuted}{512 decisions per rollout batch, 4 update epochs, minibatches of 128.}
-  \note{About 40--50 seconds. We collect experience using the current controller
-  in the abstract kitchen simulator. Eight environments contribute 64 decisions
-  each, giving 512 decisions per rollout batch. We retain old log probabilities
-  and value predictions, and use GAE to estimate advantages. The Actor update
-  uses batch-normalized advantages. The ratio compares the probability of the
-  same sampled reasoning level under the current and old policies. A positive
-  advantage encourages increasing its probability, while clipping limits the
-  incentive for large policy changes. This is not a hard guarantee that all
-  probabilities remain within 20 percent of their old values. For example,
-  successful task completion after a low-effort call can reinforce that choice
-  if its return is better than expected. The Critic fits targets equal to old
-  value predictions plus unnormalized GAE advantages. The implementation
-  minimizes the negative clipped objective plus a weighted value loss and an
-  entropy regularizer, using Adam. Each batch is reused for four epochs with
-  minibatches of 128. The equations on the slide show the two main learning
-  objectives. These updates never differentiate through the kitchen simulator
-  or through Luna.}
+    \medskip
+    \item \textbf{Our experiments provide preliminary evidence.}
+    In the kitchen tasks, the learned controller reduced
+    token use by 25\% relative to the heuristic controller.
+    A consistent improvement in task success remains
+    to be established.
+  \end{itemize}
 \end{frame}
 \end{document}
